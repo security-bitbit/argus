@@ -196,7 +196,7 @@
                     👇 아래 샘플 문자 버튼을 눌러 실제 작동을 확인해 보세요
                 </h2>
                 <p class="text-xs sm:text-sm text-slate-400 mt-1">
-                    실제 아르고스(ARGUS) 앱에서 문자가 수신되었을 때 화면과 행동패턴 분석이 어떻게 작동하는지 보여주는 체험 화면입니다.
+                    실제 아르고스(ARGUS) 앱에서 문자가 수신되었을 때 화면과 행동패턴 분석 창이 어떻게 작동하는지 보여주는 체험 화면입니다.
                 </p>
             </div>
 
@@ -273,7 +273,7 @@
                 </div>
 
                 <!-- (4) 가상 지도 영역 -->
-                <div class="relative h-64 sm:h-72 bg-[#081826] overflow-hidden select-none">
+                <div id="sim-map-stage" class="relative h-72 sm:h-80 bg-[#081826] overflow-hidden select-none">
                     <!-- 배경 지도 도로망 SVG -->
                     <svg class="absolute inset-0 w-full h-full opacity-25 pointer-events-none" viewBox="0 0 400 260" preserveAspectRatio="none">
                         <path d="M-20 50 L420 120 M70 -10 L140 280 M280 -10 L220 280 M-10 190 L420 150 M-10 230 L410 250" stroke="#3b6988" stroke-width="7" fill="none"/>
@@ -285,7 +285,7 @@
                         <span class="px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-cyan-500/40 text-[10px] font-bold text-cyan-200">🔵 반경 ON</span>
                         <span class="px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-cyan-500/40 text-[10px] font-bold text-cyan-200">⚡ 동선 ON</span>
                         <span class="px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-cyan-500/40 text-[10px] font-bold text-cyan-200">🏷️ 라벨:자동</span>
-                        <span id="sim-chip-pattern" class="px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-purple-400/50 text-[10px] font-bold text-purple-200">🧠 패턴 분석</span>
+                        <button type="button" onclick="openDemoPatternModal()" id="sim-chip-pattern" class="px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-purple-400/50 text-[10px] font-bold text-purple-200 cursor-pointer hover:bg-purple-500/25 transition">🧠 패턴 분석</button>
                     </div>
 
                     <!-- 기본 마커 및 동선 레이어 (1~3번 시나리오) -->
@@ -330,34 +330,83 @@
                         </div>
                     </div>
 
-                    <!-- 행동패턴 · 핵심 활동반경 오버레이 (4번 시나리오) -->
-                    <div id="sim-pattern-layer" class="hidden absolute inset-0">
-                        <!-- 얇은 회색 측위 이동 동선 -->
+                    <!-- 행동패턴 · 핵심 활동반경 지도 오버레이 (팝업에서 '지도에 활동반경 표시' 클릭 시 표시) -->
+                    <div id="sim-pattern-map-layer" class="hidden absolute inset-0">
                         <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
-                            <polyline points="28%,66% 45%,54% 64%,40%" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" fill="none" opacity="0.55"/>
+                            <polyline points="28%,68% 46%,55% 65%,41%" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" fill="none" opacity="0.55"/>
                         </svg>
-                        <!-- 보라색 핵심 활동반경 원 -->
-                        <div class="absolute left-[47%] top-[53%] -translate-x-1/2 -translate-y-1/2 w-[178px] h-[178px] rounded-full border-2 border-[#b388ff] bg-[#b388ff]/[0.12] shadow-[0_0_24px_rgba(179,136,255,0.28)] pointer-events-none z-10"></div>
-                        <!-- 핵심 활동반경 라벨 -->
+                        <div class="absolute left-[47%] top-[54%] -translate-x-1/2 -translate-y-1/2 w-[186px] h-[186px] rounded-full border-2 border-[#b388ff] bg-[#b388ff]/[0.12] shadow-[0_0_24px_rgba(179,136,255,0.28)] pointer-events-none z-10"></div>
                         <div class="absolute left-[47%] top-[16%] -translate-x-1/2 px-2.5 py-1 rounded-full bg-[#0a1222]/95 border border-[#b388ff] text-[10px] font-extrabold text-[#e0c3ff] whitespace-nowrap shadow-lg z-20">
                             ⭕ 핵심 활동반경 (1.42km · 신호 84% 집중)
                         </div>
-                        <!-- 주거지 추정 마커 -->
-                        <div class="absolute left-[28%] top-[66%] -translate-x-1/2 -translate-y-1/2 z-20">
+                        <div class="absolute left-[28%] top-[68%] -translate-x-1/2 -translate-y-1/2 z-20">
                             <div class="relative w-3.5 h-3.5 rounded-full bg-[#00e676] border-2 border-white shadow-[0_0_10px_#00e676]"></div>
                             <div class="absolute bottom-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#0a1222]/95 border border-[#00e676] text-[9.5px] font-extrabold text-[#00e676] whitespace-nowrap shadow">
                                 🏠 주거지 추정 (PCI:281)
                             </div>
                         </div>
-                        <!-- 주간 거점 추정 마커 -->
-                        <div class="absolute left-[64%] top-[40%] -translate-x-1/2 -translate-y-1/2 z-20">
+                        <div class="absolute left-[65%] top-[41%] -translate-x-1/2 -translate-y-1/2 z-20">
                             <div class="relative w-3.5 h-3.5 rounded-full bg-[#ffd740] border-2 border-white shadow-[0_0_10px_#ffd740]"></div>
                             <div class="absolute bottom-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#0a1222]/95 border border-[#ffd740] text-[9.5px] font-extrabold text-[#ffd740] whitespace-nowrap shadow">
                                 🏢 주간 거점 추정 (PCI:415)
                             </div>
                         </div>
-                        <!-- 흐린 과거 측위 경유점 -->
-                        <div class="absolute left-[45%] top-[54%] -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-slate-300 opacity-40 z-10"></div>
+                        <div class="absolute left-[46%] top-[55%] -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-slate-300 opacity-40 z-10"></div>
+                    </div>
+
+                    <!-- ★ 실제 앱의 '🧠 패턴 분석' 팝업 창 미리보기 (4번 버튼 클릭 시 기본 표시) ★ -->
+                    <div id="sim-pattern-modal" class="hidden absolute inset-0 z-30 bg-[#040c14]/75 backdrop-blur-[2px] flex items-center justify-center p-2.5">
+                        <div class="w-full max-w-[360px] max-h-full bg-[#071522] border border-purple-400/50 rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden">
+                            <!-- 팝업 헤더 -->
+                            <div class="px-3 py-2 border-b border-cyan-500/20 flex items-center justify-between bg-[#06111a]">
+                                <span class="text-[11.5px] font-extrabold text-[#d1b3ff]">🧠 행동패턴 · 핵심 활동반경 분석</span>
+                                <button type="button" onclick="showDemoPatternMapOnly()" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white">닫기 ✕</button>
+                            </div>
+
+                            <!-- 팝업 본문 (실제 앱 패턴 분석 카드 구성 그대로) -->
+                            <div class="p-2.5 space-y-2 overflow-y-auto text-left">
+                                <!-- 카드 1: 유효 추적 시간 및 신뢰도 -->
+                                <div class="rounded-lg bg-[#08192a]/90 border border-cyan-500/25 p-2 space-y-1">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-[10.5px] font-extrabold text-[#00e5ff]">⏱️ 유효 추적 시간 및 신뢰도</span>
+                                        <span class="px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-[#00e676] text-[#00e676] text-[9px] font-extrabold">매우 높음</span>
+                                    </div>
+                                    <div class="text-[10.5px] text-slate-200 leading-snug">
+                                        • <b>유효 추적:</b> 3일 (정상 신호 842건)
+                                    </div>
+                                    <div class="text-[9.5px] text-slate-400">
+                                        • 전원 꺼짐 18건(약 1시간 30분) 분석 제외됨
+                                    </div>
+                                </div>
+
+                                <!-- 카드 2: 핵심 활동반경 -->
+                                <div class="rounded-lg bg-[#08192a]/90 border border-purple-400/40 p-2 space-y-0.5">
+                                    <div class="text-[10.5px] font-extrabold text-[#d1b3ff]">⭕ 핵심 활동반경 (주요 생활권)</div>
+                                    <div class="text-[10.5px] text-slate-200 leading-snug">
+                                        • 중심점 기준 약 <b class="text-white">1.42 km</b> (정상 신호 <b class="text-[#d1b3ff]">84%</b> 집중)
+                                    </div>
+                                </div>
+
+                                <!-- 카드 3: 시간대별 주요 거점 추정 -->
+                                <div class="rounded-lg bg-[#08192a]/90 border border-cyan-500/25 p-2 space-y-1">
+                                    <div class="text-[10.5px] font-extrabold text-[#00e5ff]">🕒 시간대별 주요 거점 추정</div>
+                                    <div class="text-[10px] text-slate-200 leading-snug">
+                                        🌙 <b>주거지(00~07시):</b> <b class="text-[#00e676]">인천 계양 코아루아파트</b> <span class="text-slate-400">(88% · PCI 281)</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-200 leading-snug">
+                                        ☀️ <b>주간 거점(09~18시):</b> <b class="text-[#ffd740]">인천 계양구 계산새로 68</b> <span class="text-slate-400">(79% · PCI 415)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 팝업 하단 버튼 -->
+                            <div class="px-2.5 py-2 border-t border-cyan-500/20 bg-[#06111a] flex items-center gap-1.5">
+                                <button type="button" onclick="showDemoPatternMapOnly()" class="flex-1 py-1.5 px-2 rounded-lg bg-purple-500/20 border border-[#b388ff] text-[#e0c3ff] text-[10px] font-extrabold hover:bg-purple-500/30 transition">
+                                    🗺️ 지도에 활동반경 표시
+                                </button>
+                                <span class="py-1.5 px-2 rounded-lg bg-amber-500/15 border border-amber-400/50 text-[#ffab00] text-[10px] font-extrabold">📋 복사</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 우측 하단 줌/내위치/타겟 FAB 버튼 -->
@@ -497,16 +546,16 @@
                         시간대별 <span class="text-[#00e676]">주거지·주간 거점</span> 자동 추정 및 <span class="text-[#d1b3ff]">핵심 활동반경</span> 시각화
                     </h3>
                     <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                        누적된 추적 기록을 분석해 심야 주거지 추정, 주간 주요 거점, 일시적 원거리 이탈을 제외한 상위 80% 핵심 활동반경을 지도 위에 바로 표시합니다. 수신 간격(5분·30분)에 영향받지 않도록 <b class="text-white">추적 기간(시간) 기준 신뢰도</b>와 잠복 권장 시간대 브리핑을 제공합니다.
+                        누적된 추적 데이터를 시공간 클러스터링 알고리즘으로 분석해 심야 주거지 추정, 주간 주요 거점, 상위 80% 핵심 활동반경을 산출합니다. 전원 꺼짐 구간은 자동 제외하고 <b class="text-white">유효 추적 시간 기준 신뢰도</b>와 잠복 권장 시간대 브리핑을 제공합니다.
                     </p>
                 </div>
 
                 <div class="bg-[#06111a] rounded-xl p-3.5 border border-purple-400/30 space-y-1.5 text-xs">
                     <div class="font-extrabold text-[#d1b3ff] flex items-center gap-1">
-                        <span>🔒 100% 기기 내 로컬 분석 엔진</span>
+                        <span>⚡ 온디바이스(On-Device) 정밀 패턴 분석</span>
                     </div>
                     <p class="text-[11.5px] text-slate-300 leading-relaxed">
-                        외부 AI 서버로 수사 데이터를 전혀 전송하지 않고 <b>스마트폰 내부에서만 자체 연산</b>하며, 분석 요약은 원터치로 복사해 보고서나 팀 상황 공유에 바로 활용할 수 있습니다.
+                        수사 보안 유지를 위해 <b>스마트폰 내부에서 실시간으로 자체 연산</b>하며, 도출된 거점·활동반경 브리핑은 원터치로 복사해 수사보고서나 팀 상황 공유에 바로 활용할 수 있습니다.
                     </p>
                 </div>
             </div>
@@ -662,6 +711,19 @@
 
     <!-- 인터랙티브 데모 시뮬레이터 스크립트 -->
     <script>
+        function openDemoPatternModal() {
+            runDemoScenario(4);
+        }
+
+        function showDemoPatternMapOnly() {
+            const patternModal = document.getElementById('sim-pattern-modal');
+            const patternMapLayer = document.getElementById('sim-pattern-map-layer');
+            const defaultLayer = document.getElementById('sim-default-layer');
+            if (patternModal) patternModal.classList.add('hidden');
+            if (defaultLayer) defaultLayer.classList.add('hidden');
+            if (patternMapLayer) patternMapLayer.classList.remove('hidden');
+        }
+
         function runDemoScenario(mode) {
             const btn1 = document.getElementById('demo-btn-1');
             const btn2 = document.getElementById('demo-btn-2');
@@ -682,7 +744,8 @@
             const kpiDist = document.getElementById('sim-kpi-dist');
 
             const defaultLayer = document.getElementById('sim-default-layer');
-            const patternLayer = document.getElementById('sim-pattern-layer');
+            const patternMapLayer = document.getElementById('sim-pattern-map-layer');
+            const patternModal = document.getElementById('sim-pattern-modal');
             const chipPattern = document.getElementById('sim-chip-pattern');
 
             const mapCircle = document.getElementById('sim-map-circle');
@@ -704,8 +767,9 @@
 
             // 기본 레이어 초기화
             defaultLayer.classList.remove('hidden');
-            patternLayer.classList.add('hidden');
-            chipPattern.className = "px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-purple-400/50 text-[10px] font-bold text-purple-200";
+            patternMapLayer.classList.add('hidden');
+            patternModal.classList.add('hidden');
+            chipPattern.className = "px-2.5 py-1 rounded-full bg-[#06111a]/85 border border-purple-400/50 text-[10px] font-bold text-purple-200 cursor-pointer hover:bg-purple-500/25 transition";
             kpiCount.innerText = "2 개소";
             kpiDistLabel.innerText = "이동거리";
             kpiDist.innerText = "1.42 km";
@@ -806,24 +870,25 @@
                 kpiStatus.innerText = "🧠 분석 완료 (3일)";
                 kpiStatus.style.color = "#d1b3ff";
                 kpiPciTarget.innerText = "신뢰도: 매우 높음";
-                kpiPciMy.innerHTML = "로컬 자체 분석";
+                kpiPciMy.innerHTML = "온디바이스 정밀 분석";
                 kpiPciMy.style.color = "#00e676";
                 kpiDistLabel.innerText = "핵심 활동반경";
                 kpiDist.innerText = "1.42 km";
                 kpiDist.style.color = "#d1b3ff";
 
                 defaultLayer.classList.add('hidden');
-                patternLayer.classList.remove('hidden');
-                chipPattern.className = "px-2.5 py-1 rounded-full bg-purple-500/35 border border-[#b388ff] text-[10px] font-extrabold text-white shadow-[0_0_10px_rgba(179,136,255,0.4)]";
+                patternMapLayer.classList.remove('hidden');
+                patternModal.classList.remove('hidden');
+                chipPattern.className = "px-2.5 py-1 rounded-full bg-purple-500/35 border border-[#b388ff] text-[10px] font-extrabold text-white shadow-[0_0_10px_rgba(179,136,255,0.4)] cursor-pointer";
 
                 rawPrefix.innerText = "🧠 패턴 분석 브리핑:";
                 rawPrefix.style.color = "#d1b3ff";
-                rawSms.innerText = "추적 3일 누적 · 핵심 활동반경 1.42km (전체 신호 84% 집중) · 외부 전송 없음";
+                rawSms.innerText = "유효 추적 3일(꺼짐 제외) · 핵심 활동반경 1.42km · 팝업 내 '지도에 활동반경 표시' 터치 가능";
                 logCard.style.borderLeftColor = "#b388ff";
                 cardBadge.style.backgroundColor = "#b388ff";
                 cardBadge.innerText = "패턴 분석";
                 cardStatus.className = "px-2 py-0.5 rounded bg-purple-500/25 text-[#e0c3ff] font-extrabold text-[10px]";
-                cardStatus.innerText = "⭕ 신뢰도 매우 높음 (3일 누적)";
+                cardStatus.innerText = "⭕ 신뢰도 매우 높음 (유효 3일)";
                 cardAddr.innerText = "주거·주간 거점 자동 분리 완료";
                 cardMeta.innerHTML = `🏠 <b class="text-[#00e676]">주거지(00~07시):</b> 인천 계양 코아루아파트(88%) | 🏢 <b class="text-[#ffd740]">주간(09~18시):</b> 계산새로 68(79%)`;
                 cardLinks.classList.add('hidden');
